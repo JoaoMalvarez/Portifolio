@@ -1,10 +1,15 @@
 <!-- src/components/CenaCastelo.vue -->
 <template>
   <section id="castelo" class="cena castelo">
-    <!-- Pilares nas bordas, cobrindo a altura toda -->
-    <div class="pilar-faixa pilar-esq"></div>
-    <div class="pilar-faixa pilar-dir"></div>
-
+    
+    <img
+      v-for="(p, i) in pilares"
+      :key="'p' + i"
+      class="pilar"
+      src="/castelo/Coluna.png"
+      :style="estiloPilar(p)"
+      alt=""
+    />
     <!-- TOPO: nome em cima, trono embaixo -->
     <header class="topo">
       <h1 class="nome">{{ perfil.nome }}</h1>
@@ -93,7 +98,7 @@
       <!-- SAÍDA: fim do tapete -> cidade -->
       <div class="saida">
         <img
-          class="guarda guarda-esq"
+          class="guarda guarda-esq" 
           src="/personagens/p5.png"
           alt=""
           @mouseenter="brilho = true"
@@ -210,9 +215,9 @@ const brilho = ref(false)
 
 // Ao lado do trono. x = distância do centro, w = largura, flip = espelhar
 const seresTrono: Ser[] = [
-  { src: '/personagens/p1.png', x: -200, w: 150, flip: false },
+  { src: '/personagens/p1.png', x: -200, w: 150, flip: false }, // gato mordomo
   {
-    src: '/personagens/p8.png',
+    src: '/personagens/p8.png', // lontra aprendiz
     x: 500,
     w: 250,
     flip: true,
@@ -222,21 +227,40 @@ const seresTrono: Ser[] = [
 ]
 
 // No salão. top = altura em px dentro do salão (0 = começo do chão)
-// Os personagens ficam sempre do lado OPOSTO ao pergaminho daquela linha.
-// (p5 e p11 agora são os guardas da porta, por isso saíram desta lista)
 const seresFundo: Ser[] = [
   // linha 1 (pergaminho à esquerda -> personagens à direita)
-  { src: '/personagens/p9.png', x: 330, top: 260, w: 200, flip: true },
-  { src: '/personagens/p3.png', x: 520, top: 380, w: 120, flip: true },
+  { src: '/personagens/p9.png', x: 330, top: 260, w: 200, flip: true }, // rato palitó
+  { src: '/personagens/p3.png', x: 520, top: 380, w: 120, flip: true }, // pequeno gato
   // linha 2 (pergaminho à direita -> personagens à esquerda)
-  { src: '/personagens/p12.png', x: -330, top: 550, w: 300, flip: true },
-  { src: '/personagens/p6.png', x: -600, top: 820, w: 200, flip: true },
+  { src: '/personagens/p12.png', x: -330, top: 550, w: 300, flip: true }, // gato mago
+  { src: '/personagens/p6.png', x: -510, top: 820, w: 200, flip: true }, // gato aprendiz
   // linha 3 (pergaminho à esquerda -> personagens à direita)
-  { src: '/personagens/p4.png', x: 340, top: 1300, w: 200, flip: true },
-  { src: '/personagens/p7.png', x: 500, top: 940, w: 350, flip: true },
+  { src: '/personagens/p4.png', x: 340, top: 1300, w: 200, flip: true }, // gato coringa
+  { src: '/personagens/p7.png', x: 400, top: 940, w: 350, flip: true }, // bardos animais
   // linha 4 (pergaminho à direita -> personagens à esquerda)
-  { src: '/personagens/p2.png', x: -340, top: 1380, w: 170, flip: true },
+  { src: '/personagens/p2.png', x: -340, top: 1380, w: 170, flip: true }, // sapo explorador
 ]
+
+// ----- pilares nas bordas, com espaço entre eles -----
+const escalaPilar = 1.4   // tamanho
+const margemBorda = 70    // distância do centro do pilar até a borda da tela
+const espaco = 650        // distância entre o topo de um pilar e o do próximo
+const quantidade = 5      // sobe se sobrar chão sem pilar embaixo
+
+const pilares = Array.from({ length: quantidade }, (_, i) => i).flatMap((i) => [
+  { y: i * espaco, lado: -1 },
+  { y: i * espaco, lado: 1 },
+])
+
+function estiloPilar(p: { y: number; lado: number }) {
+  return {
+    top: p.y + 'px', // o 1º tem y = 0: o topo dele encosta no topo da tela
+    left: p.lado < 0 ? `${margemBorda}px` : `calc(100% - ${margemBorda}px)`,
+    width: 150 * escalaPilar + 'px',
+    transform: `translateX(-50%) scaleX(${-p.lado})`,
+  }
+}
+
 </script>
 
 <style scoped>
@@ -257,19 +281,12 @@ img { position: absolute; image-rendering: pixelated; }
 }
 
 /* ---------- PILARES (faixa repetida na altura toda) ---------- */
-.pilar-faixa {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 150px;
-  z-index: 3;
-  background-image: url('/castelo/Coluna.png');
-  background-size: 150px auto;
-  background-repeat: repeat-y;
-  image-rendering: pixelated;
+.pilar {
+  z-index: 2;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 14px 10px rgba(0, 0, 0, 0.55));
 }
-.pilar-esq { left: -80px; }
-.pilar-dir { right: -80px; transform: scaleX(-1);}
 
 /* ---------- TOPO ---------- */
 .topo {
@@ -313,12 +330,27 @@ img { position: absolute; image-rendering: pixelated; }
 /* ---------- SALÃO (CAMINHO COMPRIDO) ---------- */
 .salao {
   position: relative;
-  z-index: 2;
   padding: 130px 0 160px;
-  background-image: url('/castelo/Chão_Pedra.jpg');
-  background-size: 300px;
-  background-repeat: repeat;
+  background-image:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0, rgba(0, 0, 0, 0) 450px),
+    url('/castelo/Chão_Pedra.jpg');
+  background-size: 100% 450px, 300px 140px;
+  background-repeat: no-repeat, repeat;
   box-shadow: inset 0 24px 36px -12px rgba(0, 0, 0, 0.7);
+}
+
+.salao::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background-image: url('/castelo/Baixo_Parede.jpg');  
+  background-size: 120px;
+  border-bottom: 4px solid #12121c;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.35);
+  z-index: 1;
 }
 
 .tapete {
@@ -329,7 +361,7 @@ img { position: absolute; image-rendering: pixelated; }
   transform: translateX(-50%);
   width: 260px;
   background-image: url('/castelo/Tapete.jpg');
-  background-size: 260px;
+  background-size: 260px 140px;
   background-repeat: repeat-y;
 }
 
@@ -463,7 +495,7 @@ img { position: absolute; image-rendering: pixelated; }
   transition: filter 0.2s;
 }
 .guarda:hover { filter: brightness(1.15); }
-.guarda-esq { left: 0; }
+.guarda-esq { left: 0; } 
 .guarda-dir { right: 0; transform: scaleX(-1); } /* espelha pra olhar pro tapete */
 
 /* ---------- POP-UP DO CURRÍCULO ---------- */
